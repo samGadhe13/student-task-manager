@@ -35,15 +35,36 @@ pipeline {
                 '''
             }
         }
+
+        stage('Code Inspection') {
+            steps {
+                echo 'Running SonarQube analysis'
+
+                withCredentials([
+                    string(
+                        credentialsId: 'sonar-token',
+                        variable: 'SONAR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        export PATH=/opt/sonar-scanner/bin:$PATH
+
+                        sonar-scanner \
+                          -Dsonar.host.url=http://localhost:9000 \
+                          -Dsonar.token="$SONAR_TOKEN"
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'CI pipeline completed successfully'
+            echo 'CI pipeline including SonarQube completed successfully'
         }
 
         failure {
-            echo 'CI pipeline failed. Check the failed stage and Console Output.'
+            echo 'Pipeline failed. Review the failed stage and Console Output.'
         }
 
         always {
